@@ -1,8 +1,5 @@
-import {
-  CredenciaisLogin,
-  Usuario,
-  UsuarioResponse,
-} from "../model/entities/usuarios";
+import { CredenciaisLogin, UsuarioResponse } from "../model/dto/usuarios";
+import { Usuario } from "../model/entities/usuarios";
 import { prisma } from "../../lib/prisma";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
@@ -51,7 +48,7 @@ export default {
             fullName: response.fullName,
             email: response.email,
           };
-          const token = jwt.sign(user, jwtSecret, { expiresIn: "1m" });
+          const token = jwt.sign(user, jwtSecret, { expiresIn: "1d" });
           const resposta = {
             ok: true,
             message: "Usuário logado com sucesso!",
@@ -66,5 +63,4 @@ export default {
       return { ok: false, error: "Erro no servidor, tente novamente!" };
     }
   },
- 
 };
