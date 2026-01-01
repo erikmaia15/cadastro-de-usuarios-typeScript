@@ -15,8 +15,6 @@ router.post("/", async (req: Request, res: Response) => {
   if (!password?.trim()) {
     return res.status(400).json({ error: "Senha é obrigatória." });
   }
-
-  console.log(password);
   const novoUsuario = await usuarioService.postUsuario({
     fullName,
     email,
@@ -49,7 +47,7 @@ router.post("/login", async (req: Request, res: Response) => {
   if (!user?.response?.ok) {
     return res.status(404).json({ erro: user?.message });
   } else {
-    return res.status(201).json({ resposta: user.response });
+    return res.status(200).json({ resposta: user.response });
   }
 });
 
@@ -67,6 +65,29 @@ router.get("/info-user", async (req: Request, res: Response) => {
         token: response.tokenDecoded,
       });
     }
+  }
+});
+
+router.get("/listar-usuarios", async (req: Request, res: Response) => {
+  if (
+    !req.headers.authorization ||
+    req.headers.authorization === null ||
+    req.headers.authorization === undefined
+  ) {
+    res.status(401).json({ message: "Precisa se autenticar!" });
+  }
+  const token: string = req.headers.authorization as string;
+  if (!token || token === null || token === undefined) {
+    res.status(401).json({ message: "Precisa se autenticar!" });
+  }
+  const cleanToken = token.replace("Bearer ", "");
+
+  const response = await usuarioService.listarUsuarios(cleanToken);
+  if (!response || !response.ok) {
+    res.status(404).json({ message: response.message });
+  }
+  if (response.ok) {
+    res.status(200).json({ message: response.message, users: response.users });
   }
 });
 

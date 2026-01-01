@@ -1,6 +1,11 @@
-import { CredenciaisLogin, UsuarioResponse } from "../model/dto/usuarios";
+import {
+  CredenciaisLogin,
+  UsuarioResponse,
+  UsuarioResponseArray,
+} from "../model/dto/usuarios";
 import { Usuario } from "../model/entities/usuarios";
 import { prisma } from "../../lib/prisma";
+import adminRoute from "../middleware/adminRoute";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 export default {
@@ -20,6 +25,7 @@ export default {
         id: response.id,
         email: response.email,
         fullName: response.fullName ?? "",
+        isAdmin: response.isAdmin,
       };
       return { ok: true, data: data };
     } catch (error: any) {
@@ -47,6 +53,7 @@ export default {
             id: response.id,
             fullName: response.fullName,
             email: response.email,
+            isAdmin: response.isAdmin,
           };
           const token = jwt.sign(user, jwtSecret, { expiresIn: "1d" });
           const resposta = {
@@ -61,6 +68,34 @@ export default {
       }
     } catch (erro) {
       return { ok: false, error: "Erro no servidor, tente novamente!" };
+    }
+  },
+  async listarUsuarios(token: string) {
+    const response = adminRoute.isAdmin(token);
+    if (!response) {
+      return {
+        ok: false,
+        message: "Acesso negado!",
+      };
+    }
+    try {
+      const users = await prisma.user.findMany({
+        select: {
+          id: true,
+          fullName: true,
+          isAdmin: true,
+          email: true,
+        },
+      });
+      const usuariosResponse: UsuarioResponseArray = users;
+      return {
+        ok: true,
+        message: "Usuários listados com sucesso!",
+        users: usuariosResponse,
+      };
+    } catch (error) {
+      console.log(error);
+      return { ok: false, message: "Erro no servidor, tente novamente!" };
     }
   },
 };
